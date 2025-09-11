@@ -80,3 +80,55 @@ resource "aws_instance" "this" {
 
   tags = local.tags_common
 }
+
+
+resource "aws_db_subnet_group" "rds" {
+  name       = "poc-infracost-rds-subnets"
+  subnet_ids = data.aws_subnets.default.ids
+}
+
+resource "aws_security_group" "rds" {
+  name        = "poc-infracost-rds-sg"
+  description = "Allow DB access"
+  vpc_id      = data.aws_vpc.default.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  dynamic "ingress" {
+    for_each = length(var.allowed_cidrs) > 0 ? [1] : []
+    content {
+      description = "PostgreSQL"
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      cidr_blocks = var.allowed_cidrs
+    }
+  }
+}
+
+resource "aws_db_instance" "rds" {
+  identifier                 = "poc-infracost-rds"
+  engine                     = "postgres"
+  engine_version             = "15.5"
+  instance_class             = var.db_instance_class
+  db_name                    = var.db_name
+  username                   = var.db_username
+  password                   = random_password.db.result
+  allocated_storage          = var.db_allocated_storage_gb
+  storage_type               = "gp3"
+  db_subnet_group_name       = aws_db_subnet_group.rds.name
+  vpc_security_group_ids     = [aws_security_group.rds.id]
+  multi_az                   = false
+  publicly_accessible        = var.publicly_accessible
+  backup_retention_period    = 1
+  deletion_protection        = false
+  skip_final_snapshot        = true
+  apply_immediately          = true
+  auto_minor_version_upgrade = true
+  monitoring_interval        = 0
+}

@@ -3,13 +3,15 @@ output "instance_id" {
   value       = aws_instance.this.id
 }
 
-output "public_ip" {
-  description = "IP pública de la instancia"
-  value       = aws_instance.this.public_ip
+output "rds_endpoint" {
+  value = aws_db_instance.rds.address
 }
 
-output "public_dns" {
-  description = "DNS público de la instancia"
-  value       = aws_instance.this.public_dns
+output "rds_port" {
+  value = aws_db_instance.rds.port
+}
+
+output "rds_db_name" {
+  value = aws_db_instance.rds.db_name
 }
 
