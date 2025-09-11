@@ -4,12 +4,6 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
-variable "instance_type" {
-  description = "Talla (tipo) de instancia EC2. Por defecto, la más económica ARM."
-  type        = string
-  default     = "t4g.nano"
-}
-
 variable "ami_arch" {
   description = "Arquitectura de la AMI a usar: arm64 o x86_64. Cambia a x86_64 si usas una instancia no-ARM (por ej. t3.micro)."
   type        = string

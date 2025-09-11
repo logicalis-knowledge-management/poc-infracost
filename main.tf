@@ -66,11 +66,12 @@ locals {
     Project     = "terraform-ec2-demo"
     Provisioner = "Terraform"
   }
+  instance_type = "t4g.nano"
 }
 
 resource "aws_instance" "this" {
   ami           = local.selected_ami_id
-  instance_type = var.instance_type
+  instance_type = local.instance_type
 
   subnet_id                   = local.subnet_id
   associate_public_ip_address = false
