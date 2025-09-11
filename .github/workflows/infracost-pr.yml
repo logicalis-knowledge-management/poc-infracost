@@ -1,0 +1,52 @@
+name: Infracost PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  infracost:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # necesario para comentar en el PR
+    env:
+      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+    steps:
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      # 1) Baseline en la rama base (main/master del PR)
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Generate baseline
+        run: |
+          infracost breakdown --path . \
+                              --format json \
+                              --out-file /tmp/infracost-base.json
+
+      # 2) Cambiamos a la rama del PR y calculamos el diff
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+
+      - name: Generate diff
+        run: |
+          infracost diff --path . \
+                         --format json \
+                         --compare-to /tmp/infracost-base.json \
+                         --out-file /tmp/infracost.json
+
+      # 3) Publicamos el comentario en el PR
+      - name: Comment PR
+        run: |
+          infracost comment github \
+            --path /tmp/infracost.json \
+            --repo $GITHUB_REPOSITORY \
+            --pull-request ${{ github.event.pull_request.number }} \
+            --github-token ${{ github.token }} \
+            --behavior update
