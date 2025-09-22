@@ -41,6 +41,71 @@ jobs:
                          --compare-to /tmp/infracost-base.json \
                          --out-file /tmp/infracost.json
 
+      # 2.5) Validamos el aumento de coste frente a la tolerancia definida en variables de GitHub
+      - name: Validate cost increase against tolerance
+        run: |
+          if [ -z "${{ vars.tolerancia_aumento_gasto }}" ]; then
+            echo "Error: La variable de repositorio 'tolerancia_aumento_gasto' no está definida (Settings > Variables)." >&2
+            exit 1
+          fi
+
+          echo "Leyendo datos de /tmp/infracost.json..."
+          # Leemos métricas de nivel raíz del diff de Infracost
+          TOTAL=$(jq -r '.totalMonthlyCost // 0 | tonumber' /tmp/infracost.json)
+          DIFF=$(jq -r '.diffTotalMonthlyCost // 0 | tonumber' /tmp/infracost.json)
+          PREV=$(jq -r '.pastTotalMonthlyCost // 0 | tonumber' /tmp/infracost.json)
+
+          # Solo penalizamos aumentos (si DIFF <= 0, ratio = 0)
+          POSITIVE_INCREASE=$(echo "$DIFF > 0" | bc -l)
+          if [ "$POSITIVE_INCREASE" -eq 1 ]; then
+            ZERO_PREV=$(echo "$PREV <= 0" | bc -l)
+            if [ "$ZERO_PREV" -eq 1 ]; then
+              RATIO="inf"
+            else
+              RATIO=$(echo "scale=10; $DIFF / $PREV" | bc -l)
+            fi
+          else
+            RATIO=0
+          fi
+
+          # Normalizamos tolerancia: acepta "0.15" o "15%"
+          RAW_TOL="${{ vars.tolerancia_aumento_gasto }}"
+          if [[ "$RAW_TOL" == *% ]]; then
+            RAW_NUM=${RAW_TOL%%%}
+            TOL=$(echo "scale=10; $RAW_NUM / 100" | bc -l)
+            TOL_DISP="$RAW_NUM%"
+          else
+            TOL=$RAW_TOL
+            TOL_PCT=$(echo "scale=6; $TOL * 100" | bc -l)
+            TOL_DISP=$(printf '%.2f%%' "$TOL_PCT")
+          fi
+
+          echo "Total mensual nuevo: $TOTAL"
+          echo "Incremento mensual: $DIFF"
+          echo "Coste previo: $PREV"
+          if [ "$RATIO" = "inf" ]; then
+            RATIO_DISP='∞%'
+          else
+            RATIO_PCT=$(echo "scale=6; $RATIO * 100" | bc -l)
+            RATIO_DISP=$(printf '%.2f%%' "$RATIO_PCT")
+          fi
+
+          echo "Ratio incremento (DIFF/PREV): $RATIO_DISP"
+          echo "Tolerancia: $TOL_DISP"
+
+          if [ "$RATIO" = "inf" ]; then
+            echo "El coste previo es 0 y existe incremento; el ratio es infinito y supera la tolerancia." >&2
+            exit 1
+          fi
+
+          EXCEEDS=$(echo "$RATIO > $TOL" | bc -l)
+          if [ "$EXCEEDS" -eq 1 ]; then
+            echo "El ratio de incremento ($RATIO_DISP) supera la tolerancia configurada ($TOL_DISP)." >&2
+            exit 1
+          else
+            echo "El incremento relativo está dentro de la tolerancia ($RATIO_DISP <= $TOL_DISP)."
+          fi
+
       # 3) Publicamos el comentario en el PR
       - name: Comment PR
         run: |
