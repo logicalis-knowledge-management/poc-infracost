@@ -4,28 +4,6 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
-variable "ami_arch" {
-  description = "Arquitectura de la AMI a usar: arm64 o x86_64. Cambia a x86_64 si usas una instancia no-ARM (por ej. t3.micro)."
-  type        = string
-  default     = "arm64"
-  validation {
-    condition     = contains(["arm64", "x86_64"], lower(var.ami_arch))
-    error_message = "ami_arch debe ser 'arm64' o 'x86_64'."
-  }
-}
-
-variable "name" {
-  description = "Nombre base para etiquetar la instancia."
-  type        = string
-  default     = "demo-ec2"
-}
-
-variable "key_name" {
-  description = "Nombre del Key Pair existente para SSH (opcional)."
-  type        = string
-  default     = null
-}
-
 variable "access_key" {
   description = "AWS Access Key ID a usar (opcional)."
   type        = string

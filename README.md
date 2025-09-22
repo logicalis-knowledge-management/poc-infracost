@@ -1,42 +1,40 @@
-# Proyecto Terraform: EC2 en Irlanda (eu-west-1)
+# 🚀 Demo de Infracost con Terraform
 
-Pequeño ejemplo que crea una instancia EC2 en la región de Irlanda con la talla configurable por variables.
+Este proyecto muestra cómo integrar **Infracost** en un flujo de trabajo con **Terraform** para:
 
-## Requisitos
-- Credenciales AWS configuradas (por ejemplo, con `aws configure`).
-- Terraform >= 1.4, Provider AWS >= 5.0.
+1. Consultar los costes de la infraestructura en local.  
+2. Bloquear automáticamente Pull Requests cuando el incremento de costes supere un umbral del **15%**.  
+3. Añadir comentarios automáticos en los PRs con el desglose de costes.  
 
-## Variables principales
-- `aws_region` (string): región AWS. Por defecto `eu-west-1` (Irlanda).
-- `instance_type` (string): tipo de instancia. Por defecto `t4g.nano` (económica ARM).
-- `ami_arch` (string): `arm64` o `x86_64`. Debe concordar con la familia de CPU del `instance_type`.
-  - Ejemplos: `t4g.*` => `arm64`, `t3.*`/`t2.*` => `x86_64`.
-- `name` (string): nombre base para etiquetas. Por defecto `demo-ec2`.
-- `key_name` (string | null): nombre de un Key Pair existente para SSH.
-- `access_key` (string | null): Access Key ID opcional para el provider.
-- `secret_key` (string | null): Secret Access Key opcional para el provider.
+La demo se basa en una infraestructura mínima en AWS y permite provocar fácilmente dos escenarios:  
+- **Cambio pequeño** (incremento < 15%, no se bloquea la PR).  
+- **Cambio grande** (incremento > 15%, la PR se bloquea).
 
-## Uso
-```bash
-cd terraform-ec2-eu-west-1
-terraform init
-terraform plan
-terraform apply -auto-approve
-```
+---
 
-Para cambiar la talla a `t3.micro` (x86_64):
-```bash
-terraform apply -var "instance_type=t3.micro" -var "ami_arch=x86_64"
-```
+## 📦 Infraestructura base
 
-Para especificar credenciales por variables (no recomendado en repos):
-```bash
-terraform apply \
-  -var "access_key=AKIA..." \
-  -var "secret_key=..."
-```
+Se define un único recurso en AWS:
 
-Salidas (`outputs`): `instance_id`, `public_ip`, `public_dns`.
+- **Instancia EC2 `t3.micro`** con un **volumen EBS gp3 de 20 GiB** (root).  
+- La AMI es Ubuntu 22.04 (última versión publicada por Canonical en la región).  
+- Se utiliza la **VPC por defecto** para simplificar.
 
-> Nota: Se usa la VPC y subred por defecto de la región. Si tu cuenta no tiene VPC por defecto, deberás suministrar tu propia VPC/Subred.
-> Seguridad: Preferible usar perfiles (`aws_profile`) o variables de entorno (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) en vez de almacenar claves en archivos.
+Archivos principales:
+- `providers.tf` → configuración del proveedor AWS.  
+- `variables.tf` → variables globales (ej. región).  
+- `main.tf` → recursos de la infraestructura.
+
+---
+
+## 🧪 Escenarios de prueba
+
+### Escenario A — Cambio pequeño (< 15%)
+Incrementar el tamaño del volumen EBS de 20 GiB → 22 GiB:
+
+```diff
+ root_block_device {
+   volume_type = "gp3"
+-  volume_size = 20
++  volume_size = 22
+ }
