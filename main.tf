@@ -1,6 +1,6 @@
 resource "aws_instance" "demo" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro" 
+  instance_type = "t3.small" 
 
   root_block_device {
     volume_type = "gp3"
