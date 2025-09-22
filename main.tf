@@ -66,8 +66,8 @@ locals {
     Project     = "terraform-ec2-demo"
     Provisioner = "Terraform"
   }
-  instance_type = "t4g.nano"
-  count_instances = 4
+  instance_type = "t4g.small"
+  count_instances = 1
 }
 
 resource "aws_instance" "this" {
