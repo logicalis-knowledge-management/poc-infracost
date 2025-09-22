@@ -13,12 +13,28 @@ resource "aws_instance" "demo" {
   }
 }
 
-data "aws_ami" "ubuntu" {
+# Amazon Linux 2023 (x86_64, HVM)
+data "aws_ami" "amazon_linux" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["137112412989"] # Amazon
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["al2023-ami-*-x86_64"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
   }
 }
