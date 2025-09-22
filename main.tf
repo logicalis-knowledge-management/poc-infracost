@@ -66,7 +66,7 @@ locals {
     Project     = "terraform-ec2-demo"
     Provisioner = "Terraform"
   }
-  instance_type = "t4g.small"
+  instance_type = "t4g.nano"
   count_instances = 1
 }
 
