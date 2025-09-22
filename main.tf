@@ -67,7 +67,7 @@ locals {
     Provisioner = "Terraform"
   }
   instance_type = "t4g.nano"
-  count_instances = 1
+  count_instances = 4
 }
 
 resource "aws_instance" "this" {
