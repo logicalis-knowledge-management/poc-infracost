@@ -1,5 +1,5 @@
 resource "aws_instance" "demo" {
-  ami           = data.aws_ami.ubuntu.id
+  ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro" 
 
   root_block_device {
