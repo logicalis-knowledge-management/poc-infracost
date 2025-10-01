@@ -41,7 +41,18 @@ jobs:
                          --compare-to /tmp/infracost-base.json \
                          --out-file /tmp/infracost.json
 
-      # 2.5) Validamos el aumento de coste frente a la tolerancia definida en variables de GitHub
+      # 3) Publicamos el comentario en el PR
+      - name: Comment PR
+        run: |
+          infracost comment github \
+            --path /tmp/infracost.json \
+            --repo $GITHUB_REPOSITORY \
+            --pull-request ${{ github.event.pull_request.number }} \
+            --github-token ${{ github.token }} \
+            --behavior update
+
+
+      # 4) Validamos el aumento de coste frente a la tolerancia definida en variables de GitHub
       - name: Validate cost increase against tolerance
         run: |
           if [ -z "${{ vars.tolerancia_aumento_gasto }}" ]; then
@@ -106,12 +117,3 @@ jobs:
             echo "El incremento relativo está dentro de la tolerancia ($RATIO_DISP <= $TOL_DISP)."
           fi
 
-      # 3) Publicamos el comentario en el PR
-      - name: Comment PR
-        run: |
-          infracost comment github \
-            --path /tmp/infracost.json \
-            --repo $GITHUB_REPOSITORY \
-            --pull-request ${{ github.event.pull_request.number }} \
-            --github-token ${{ github.token }} \
-            --behavior update
