@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: poc-infracost
+        working-directory: .
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.access_key }}
