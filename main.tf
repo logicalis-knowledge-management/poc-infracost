@@ -4,7 +4,7 @@ resource "aws_instance" "demo" {
 
   root_block_device {
     volume_type = "gp3"
-    volume_size = 255 
+    volume_size = 25 
   }
 
   tags = {
