@@ -66,8 +66,8 @@ jobs:
         run: terraform init -input=false
 
       - name: Confirmación recibida
-        run: echo "Confirm: ${{ github.event.inputs.confirm }}"
+        run: |
+          echo "Confirm=${{ github.event.inputs.confirm }}"
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -input=false
-
