@@ -59,7 +59,7 @@ jobs:
       name: destroy
     defaults:
       run:
-        working-directory: poc-infracost
+        working-directory: .
     steps:
       - name: Checkout
         uses: actions/checkout@v4
